@@ -1,35 +1,48 @@
 import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:platform/platform.dart';
+import 'package:jmessage_flutter/src/bean/jmessage.dart';
 
-final String flutterLog = "| JMessage | Flutter | ";
+/// log 的标签
+const String flutterLog = '| JMessage | Flutter | ';
 
+///解析枚举
 T getEnumFromString<T>(Iterable<T> values, String str) {
-  return values.firstWhere((f) => f.toString().split('.').last == str,
-      orElse: () => null);
+  return values.firstWhere(
+    (T f) => f.toString().split('.').last == str,
+  );
 }
 
-String getStringFromEnum<T>(T) {
-  if (T == null) {
-    return null;
+///解析枚举
+String getStringFromEnum<T>(T? t) {
+  if (t == null) {
+    return '';
   }
 
-  return T.toString().split('.').last;
+  return t.toString().split('.').last;
 }
 
 /// iOS 通知设置项
 class JMNotificationSettingsIOS {
+  ///
   final bool sound;
+
+  ///
   final bool alert;
+
+  ///
   final bool badge;
 
+  ///
   const JMNotificationSettingsIOS({
     this.sound = true,
     this.alert = true,
     this.badge = true,
   });
 
+  ///
   Map<String, dynamic> toMap() {
     return <String, bool>{'sound': sound, 'alert': alert, 'badge': badge};
   }
@@ -43,334 +56,375 @@ typedef JMCallback = void Function(dynamic a, dynamic b);
 // message 和 retractedMessage 可能是 JMTextMessage | JMVoiceMessage | JMImageMessage | JMFileMessage | JMEventMessage | JMCustomMessage;
 typedef JMMessageEventListener = void Function(dynamic message);
 
+///
 typedef JMSyncOfflineMessageListener = void Function(
     JMConversationInfo conversation, List<dynamic> messageArray);
 
+///
 class SyncOfflineMessage {
+  ///
   final JMConversationInfo conversation;
+
+  ///
   final List<dynamic> messages;
 
+  ///
   SyncOfflineMessage(this.conversation, this.messages);
 }
 
+///
 typedef JMSyncRoamingMessageListener = void Function(
     JMConversationInfo conversation);
+
+///
 typedef JMLoginStateChangedListener = void Function(
     JMLoginStateChangedType type);
+
+///
 typedef JMContactNotifyListener = void Function(JMContactNotifyEvent event);
+
+///
 typedef JMMessageRetractListener = void Function(dynamic retractedMessage);
+
+///
 typedef JMReceiveTransCommandListener = void Function(
     JMReceiveTransCommandEvent event);
+
+///
 typedef JMReceiveChatRoomMessageListener = void Function(
     List<dynamic> messageList);
+
+///
 typedef JMReceiveApplyJoinGroupApprovalListener = void Function(
     JMReceiveApplyJoinGroupApprovalEvent event);
+
+///
 typedef JMReceiveGroupAdminRejectListener = void Function(
     JMReceiveGroupAdminRejectEvent event);
+
+///
 typedef JMReceiveGroupAdminApprovalListener = void Function(
     JMReceiveGroupAdminApprovalEvent event);
 
-//  StreamController<dynamic> receiveMessageStream = StreamController.broadcast();
-//
-// 
-//  void receiveMessageClose() {
-//    receiveMessageStream.close();
-//  }
-//
-//  StreamController<SyncOfflineMessage> syncOfflineMessageStream =
-//      StreamController.broadcast();
-//  void syncOfflineMessageClose() {
-//    syncOfflineMessageStream.close();
-//  }
-
-//  StreamController<JMLoginStateChangedType> loginStateChangedStream =
-//      StreamController.broadcast();
-//  void loginStateChangedClose() {
-//    loginStateChangedStream.close();
-//  }
-
-//  StreamController<JMContactNotifyEvent> contactNotifyStream =
-//      StreamController.broadcast();
-//  void contactNotifyClose() {
-//    contactNotifyStream.close();
-//  }
-
-//  StreamController<dynamic> clickMessageNotificationStream =
-//      StreamController.broadcast();
-//  void clickMessageNotificationClose() {
-//
-//    clickMessageNotificationStream.close();
-//  }
-
-//StreamController<JMConversationInfo> syncRoamingMessageStream =
-//StreamController.broadcast();
-//void syncRoamingMessageClose() {
-//  syncRoamingMessageStream.close();
-//}
-//
-//StreamController<JMReceiveTransCommandEvent> receiveTransCommandStream =
-//StreamController.broadcast();
-//void receiveTransCommandClose() {
-//  receiveTransCommandStream.close();
-//}
-//
-//StreamController<List<dynamic>> receiveChatRoomMessageStream =
-//StreamController.broadcast();
-//void receiveChatRoomMessageClose() {
-//  receiveChatRoomMessageStream.close();
-//}
-//
-//StreamController<JMReceiveApplyJoinGroupApprovalEvent>
-//receiveApplyJoinGroupApprovalStream = StreamController.broadcast();
-//void receiveApplyJoinGroupApprovalClose() {
-//  receiveApplyJoinGroupApprovalStream.close();
-//}
-//
-//StreamController<JMReceiveGroupAdminRejectEvent>
-//receiveGroupAdminRejectStream = StreamController.broadcast();
-//void receiveGroupAdminRejectClose() {
-//  receiveGroupAdminRejectStream.close();
-//}
-//
-
-//StreamController<JMReceiveGroupAdminApprovalEvent>
-//receiveGroupAdminApprovalStream = StreamController.broadcast();
-//void receiveGroupAdminApprovalClose() {
-//  receiveGroupAdminApprovalStream.close();
-//}
-//
-//StreamController<dynamic> retractMessageStream = StreamController.broadcast();
-//void retractMessageClose() {
-//  retractMessageStream.close();
-//}
-enum JMEventCallbackType{
+///
+enum JMEventCallbackType {
+  ///
   none,
+
+  ///
   receiveMessage,
+
+  ///
   syncOfflineMessage,
+
+  ///
   loginStateChangedType,
+
+  ///
   contactNotify,
+
+  ///
   clickMessageNotification,
-  
+
+  ///
   syncRoamingMessage,
+
+  ///
   receiveTransCommand,
+
+  ///
   receiveChatRoomMessage,
+
+  ///
   receiveApplyJoinGroupApproval,
+
+  ///
   receiveGroupAdminReject,
-  
+
+  ///
   receiveGroupAdminApproval,
+
+  ///
   retractMessage,
-  
 }
 
-class JmessageValue{
-   
+/// im返回事件的回调
+class JMessageValue {
+  ///
   final JMEventCallbackType type;
-  final dynamic receiveMessage;
-  final SyncOfflineMessage syncOfflineMessage;
-  final JMLoginStateChangedType loginStateChangedType;
-  final JMContactNotifyEvent contactNotify;
-  final dynamic clickMessageNotification;
 
-  final  JMConversationInfo syncRoamingMessage;
-  final  JMReceiveTransCommandEvent receiveTransCommand;
-  final  List<dynamic> receiveChatRoomMessage;
-  final JMReceiveApplyJoinGroupApprovalEvent receiveApplyJoinGroupApproval;
-  final JMReceiveGroupAdminRejectEvent   receiveGroupAdminReject;
+  ///
+  final JMNormalMessage? receiveMessage;
 
-  final JMReceiveGroupAdminApprovalEvent receiveGroupAdminApproval;
-  final  dynamic retractMessage;
+  ///
+  final SyncOfflineMessage? syncOfflineMessage;
 
-  JmessageValue({this.receiveMessage, 
-    this.syncOfflineMessage, 
-    this.loginStateChangedType, 
-    this.contactNotify, 
-    this.clickMessageNotification, 
-    this.syncRoamingMessage, 
-    this.receiveTransCommand,
-    this.receiveChatRoomMessage,
-    this.receiveApplyJoinGroupApproval,
-    this.receiveGroupAdminReject,
-    this.receiveGroupAdminApproval,
-    this.retractMessage, 
-    this.type = JMEventCallbackType.none});
-  
-  JmessageValue copyWith({
-    JMEventCallbackType type,
-     dynamic receiveMessage,
-     SyncOfflineMessage syncOfflineMessage,
-     JMLoginStateChangedType loginStateChangedType,
-     JMContactNotifyEvent contactNotify,
-     dynamic clickMessageNotification,
+  ///
+  final JMLoginStateChangedType? loginStateChangedType;
 
-      JMConversationInfo syncRoamingMessage,
-      JMReceiveTransCommandEvent receiveTransCommand,
-      List<dynamic> receiveChatRoomMessage,
-     JMReceiveApplyJoinGroupApprovalEvent receiveApplyJoinGroupApproval,
-     JMReceiveGroupAdminRejectEvent   receiveGroupAdminReject,
+  ///
+  final JMContactNotifyEvent? contactNotify;
 
-     JMReceiveGroupAdminApprovalEvent receiveGroupAdminApproval,
-      dynamic retractMessage,
-  }){
-    return JmessageValue(
+  ///
+  final Object? clickMessageNotification;
+
+  ///
+  final JMConversationInfo? syncRoamingMessage;
+
+  ///
+  final JMReceiveTransCommandEvent? receiveTransCommand;
+
+  ///
+  final List<dynamic>? receiveChatRoomMessage;
+
+  ///
+  final JMReceiveApplyJoinGroupApprovalEvent? receiveApplyJoinGroupApproval;
+
+  ///
+  final JMReceiveGroupAdminRejectEvent? receiveGroupAdminReject;
+
+  ///
+  final JMReceiveGroupAdminApprovalEvent? receiveGroupAdminApproval;
+
+  ///
+  final Object? retractMessage;
+
+  ///
+  JMessageValue(
+      {this.receiveMessage,
+      this.syncOfflineMessage,
+      this.loginStateChangedType,
+      this.contactNotify,
+      this.clickMessageNotification,
+      this.syncRoamingMessage,
+      this.receiveTransCommand,
+      this.receiveChatRoomMessage,
+      this.receiveApplyJoinGroupApproval,
+      this.receiveGroupAdminReject,
+      this.receiveGroupAdminApproval,
+      this.retractMessage,
+      this.type = JMEventCallbackType.none});
+
+  ///
+  JMessageValue copyWith({
+    JMEventCallbackType? type,
+    JMNormalMessage? receiveMessage,
+    SyncOfflineMessage? syncOfflineMessage,
+    JMLoginStateChangedType? loginStateChangedType,
+    JMContactNotifyEvent? contactNotify,
+    JMNormalMessage? clickMessageNotification,
+    JMConversationInfo? syncRoamingMessage,
+    JMReceiveTransCommandEvent? receiveTransCommand,
+    List<JMNormalMessage>? receiveChatRoomMessage,
+    JMReceiveApplyJoinGroupApprovalEvent? receiveApplyJoinGroupApproval,
+    JMReceiveGroupAdminRejectEvent? receiveGroupAdminReject,
+    JMReceiveGroupAdminApprovalEvent? receiveGroupAdminApproval,
+    JMNormalMessage? retractMessage,
+  }) {
+    return JMessageValue(
       type: type ?? this.type,
       receiveMessage: receiveMessage ?? this.receiveMessage,
       syncOfflineMessage: syncOfflineMessage ?? this.syncOfflineMessage,
-      loginStateChangedType: loginStateChangedType ?? this.loginStateChangedType,
-      contactNotify:contactNotify ?? this.contactNotify,
-      clickMessageNotification: clickMessageNotification ?? this.clickMessageNotification,
+      loginStateChangedType:
+          loginStateChangedType ?? this.loginStateChangedType,
+      contactNotify: contactNotify ?? this.contactNotify,
+      clickMessageNotification:
+          clickMessageNotification ?? this.clickMessageNotification,
       syncRoamingMessage: syncRoamingMessage ?? this.syncRoamingMessage,
       receiveTransCommand: receiveTransCommand ?? this.receiveTransCommand,
-      receiveChatRoomMessage: receiveChatRoomMessage ?? this.receiveChatRoomMessage,
-      receiveApplyJoinGroupApproval: receiveApplyJoinGroupApproval ?? this.receiveApplyJoinGroupApproval,
-      receiveGroupAdminReject: receiveGroupAdminReject ?? this.receiveGroupAdminReject,
-      receiveGroupAdminApproval: receiveGroupAdminApproval ?? this.receiveGroupAdminApproval,
+      receiveChatRoomMessage:
+          receiveChatRoomMessage ?? this.receiveChatRoomMessage,
+      receiveApplyJoinGroupApproval:
+          receiveApplyJoinGroupApproval ?? this.receiveApplyJoinGroupApproval,
+      receiveGroupAdminReject:
+          receiveGroupAdminReject ?? this.receiveGroupAdminReject,
+      receiveGroupAdminApproval:
+          receiveGroupAdminApproval ?? this.receiveGroupAdminApproval,
       retractMessage: retractMessage ?? this.retractMessage,
     );
   }
-   
 }
 
-class JmessageFlutter extends ValueNotifier<JmessageValue>{
-  
-  final MethodChannel _channel =const MethodChannel('jmessage_flutter');
-  final Platform _platform = const LocalPlatform();
-  JmessageFlutter() : super(JmessageValue());
+///
+class JmessageFlutter extends ValueNotifier<JMessageValue> {
+  final MethodChannel _channel = const MethodChannel('jmessage_flutter');
 
-
-  Future<String> get platformVersion async {
-    final String version = await _channel.invokeMethod('getPlatformVersion');
-    return version;
+  ///
+  JmessageFlutter() : super(JMessageValue()) {
+    _channel.setMethodCallHandler(_handleMethod);
   }
 
+  ///
+  // Future<String> get platformVersion async {
+  //   final String version = await _channel.invokeMethod('getPlatformVersion');
+  //   return version;
+  // }
+
   Future<void> _handleMethod(MethodCall call) async {
-    print("flutter 处理方法命令中 = ${call.method}");
+    print('flutter 处理方法命令中 = ${call.method}');
     switch (call.method) {
       case 'onReceiveMessage':
-        final msg = JMNormalMessage.generateMessageFromJson(
-            call.arguments.cast<dynamic, dynamic>());
+        final JMNormalMessage msg =
+            JMNormalMessage.cast(call.arguments as Map<String, dynamic>);
         print('接收到了消息 ===========$msg');
-        value  = value.copyWith(type: JMEventCallbackType.receiveMessage,receiveMessage: msg);
+        value = value.copyWith(
+            type: JMEventCallbackType.receiveMessage, receiveMessage: msg);
 
         break;
       case 'onRetractMessage':
-       final retractMsg = JMNormalMessage.generateMessageFromJson(
-            call.arguments.cast<dynamic, dynamic>()['retractedMessage']);
-       value = value.copyWith(type: JMEventCallbackType.retractMessage,retractMessage: retractMsg);
+        final Map<String, dynamic> params =
+            call.arguments as Map<String, dynamic>;
+
+        final JMNormalMessage retractMsg = JMNormalMessage.cast(
+            params['retractedMessage'] as Map<String, dynamic>);
+        value = value.copyWith(
+            type: JMEventCallbackType.retractMessage,
+            retractMessage: retractMsg);
 
         break;
       case 'onLoginStateChanged':
-        String type = call.arguments.cast<dynamic, dynamic>()['type'];
-        JMLoginStateChangedType loginState =
+        final String type =
+            (call.arguments as Map<String, dynamic>)['type'].toString();
+        final JMLoginStateChangedType loginState =
             getEnumFromString(JMLoginStateChangedType.values, type);
-        value = value.copyWith(type: JMEventCallbackType.loginStateChangedType,loginStateChangedType: loginState);
+        value = value.copyWith(
+            type: JMEventCallbackType.loginStateChangedType,
+            loginStateChangedType: loginState);
 
         break;
       case 'onSyncOfflineMessage':
-        Map param = call.arguments.cast<dynamic, dynamic>();
-        List msgDicArray = param['messageArray'];
-//            List<dynamic> msgs = msgDicArray.map((json) => JMNormalMessage.generateMessageFromJson(json)).toList();
+        final Map<String, dynamic> param =
+            call.arguments as Map<String, dynamic>;
+        final List<dynamic> messages = (param['messageArray'] as List<dynamic>)
+            .map((dynamic e) => e as Map<String, dynamic>)
+            .map<dynamic>((Map<String, dynamic> e) => JMNormalMessage.cast(e))
+            .toList();
 
-        List<dynamic> msgs = [];
-        for (Map json in msgDicArray) {
-          print("offline message: ${json.toString()}");
-          JMNormalMessage normsg =
-              JMNormalMessage.generateMessageFromJson(json);
-          msgs.add(normsg);
-        }
-        final syncOfflineMsg = SyncOfflineMessage(
-            JMConversationInfo.fromJson(param['conversation']), msgs);
+        final SyncOfflineMessage syncOfflineMsg = SyncOfflineMessage(
+            JMConversationInfo.fromJson(
+                param['conversation'] as Map<String, dynamic>),
+            messages);
 
-         value = value.copyWith(type: JMEventCallbackType.syncOfflineMessage,syncOfflineMessage: syncOfflineMsg);
+        value = value.copyWith(
+            type: JMEventCallbackType.syncOfflineMessage,
+            syncOfflineMessage: syncOfflineMsg);
 
         break;
       case 'onSyncRoamingMessage':
-        Map json = call.arguments.cast<dynamic, dynamic>();
-        final conversationInfo = JMConversationInfo.fromJson(json);
-        value = value.copyWith(syncRoamingMessage: conversationInfo,type: JMEventCallbackType.syncRoamingMessage);
+        final Map<String, dynamic> json =
+            call.arguments as Map<String, dynamic>;
+        final JMConversationInfo conversationInfo =
+            JMConversationInfo.fromJson(json);
+        value = value.copyWith(
+            syncRoamingMessage: conversationInfo,
+            type: JMEventCallbackType.syncRoamingMessage);
         break;
       case 'onContactNotify':
-        Map json = call.arguments.cast<dynamic, dynamic>();
-        final contactNotify = JMContactNotifyEvent.fromJson(json);
-        value = value.copyWith(contactNotify: contactNotify,type: JMEventCallbackType.contactNotify);
+        final Map<String, dynamic> json =
+            call.arguments as Map<String, dynamic>;
+        final JMContactNotifyEvent contactNotify =
+            JMContactNotifyEvent.fromJson(json);
+        value = value.copyWith(
+            contactNotify: contactNotify,
+            type: JMEventCallbackType.contactNotify);
 
         break;
       case 'onClickMessageNotification':
         // TODO: only work in android
-        Map json = call.arguments.cast<dynamic, dynamic>();
+        final Map<String, dynamic> json =
+            call.arguments as Map<String, dynamic>;
         print('点击了消息通知========================= $json');
-        final msg = JMNormalMessage.generateMessageFromJson(json);
+        final JMNormalMessage msg = JMNormalMessage.cast(json);
 
-        value = value.copyWith(clickMessageNotification: msg,type: JMEventCallbackType.clickMessageNotification);
+        value = value.copyWith(
+            clickMessageNotification: msg,
+            type: JMEventCallbackType.clickMessageNotification);
 
         break;
       case 'onReceiveTransCommand':
-        Map json = call.arguments.cast<dynamic, dynamic>();
-        JMReceiveTransCommandEvent ev =
+        final Map<String, dynamic> json =
+            call.arguments as Map<String, dynamic>;
+        final JMReceiveTransCommandEvent ev =
             JMReceiveTransCommandEvent.fromJson(json);
-        value = value.copyWith(receiveTransCommand: ev,type: JMEventCallbackType.receiveTransCommand);
+        value = value.copyWith(
+            receiveTransCommand: ev,
+            type: JMEventCallbackType.receiveTransCommand);
         break;
       case 'onReceiveChatRoomMessage':
-        List<dynamic> msgJsons = call.arguments.cast();
-        List<dynamic> msgs = msgJsons
-            .map((json) => JMNormalMessage.generateMessageFromJson(json))
+        final List<JMNormalMessage> messages = (call.arguments as List<dynamic>)
+            .map((dynamic e) => e as Map<String, dynamic>)
+            .map((Map<String, dynamic> e) => JMNormalMessage.cast(e))
             .toList();
-        value = value.copyWith(receiveChatRoomMessage: msgs,type: JMEventCallbackType.receiveChatRoomMessage);
+        value = value.copyWith(
+            receiveChatRoomMessage: messages,
+            type: JMEventCallbackType.receiveChatRoomMessage);
         break;
       case 'onReceiveApplyJoinGroupApproval':
-        Map json = call.arguments.cast<dynamic, dynamic>();
-        JMReceiveApplyJoinGroupApprovalEvent e =
+        final Map<String, dynamic> json =
+            call.arguments as Map<String, dynamic>;
+        final JMReceiveApplyJoinGroupApprovalEvent e =
             JMReceiveApplyJoinGroupApprovalEvent.fromJson(json);
-        value = value.copyWith(receiveApplyJoinGroupApproval: e,type: JMEventCallbackType.receiveApplyJoinGroupApproval);
+        value = value.copyWith(
+            receiveApplyJoinGroupApproval: e,
+            type: JMEventCallbackType.receiveApplyJoinGroupApproval);
         break;
       case 'onReceiveGroupAdminReject':
-        Map json = call.arguments.cast<dynamic, dynamic>();
-        final e = JMReceiveGroupAdminRejectEvent.fromJson(json);
+        final Map<String, dynamic> json =
+            call.arguments as Map<String, dynamic>;
+        final JMReceiveGroupAdminRejectEvent e =
+            JMReceiveGroupAdminRejectEvent.fromJson(json);
 
-        value = value.copyWith(receiveGroupAdminReject: e,type: JMEventCallbackType.receiveGroupAdminReject);
+        value = value.copyWith(
+            receiveGroupAdminReject: e,
+            type: JMEventCallbackType.receiveGroupAdminReject);
         break;
       case 'onReceiveGroupAdminApproval':
-        Map json = call.arguments.cast<dynamic, dynamic>();
-        final e = JMReceiveGroupAdminApprovalEvent.fromJson(json);
-        value = value.copyWith(receiveGroupAdminApproval: e,type: JMEventCallbackType.receiveGroupAdminApproval);
+        final Map<String, dynamic> json =
+            call.arguments as Map<String, dynamic>;
+        final JMReceiveGroupAdminApprovalEvent e =
+            JMReceiveGroupAdminApprovalEvent.fromJson(json);
+        value = value.copyWith(
+            receiveGroupAdminApproval: e,
+            type: JMEventCallbackType.receiveGroupAdminApproval);
         break;
       default:
-        throw new UnsupportedError("Unrecognized Event");
+        throw UnsupportedError('Unrecognized Event');
     }
     return;
   }
 
-  void init({
-    @required bool isOpenMessageRoaming,
-    @required String appkey,
-    String channel,
+  ///初始化
+  Future<void> init({
+    required bool isOpenMessageRoaming,
+    required String appKey,
+    String? channel,
     bool isProduction = false,
-  }) {
-    _channel.setMethodCallHandler(_handleMethod);
-
-    _channel.invokeMethod(
-        'setup',
-        {
-          'isOpenMessageRoaming': isOpenMessageRoaming,
-          'appkey': appkey,
-          'channel': channel,
-          'isProduction': isProduction
-        }..removeWhere((key, value) => value == null));
+  }) async {
+    return _channel.invokeMethod<void>('setup', <String, dynamic>{
+      'isOpenMessageRoaming': isOpenMessageRoaming,
+      'appkey': appKey,
+      'channel': channel,
+      'isProduction': isProduction
+    });
   }
 
-  void setDebugMode({bool enable = false}) {
-    _channel.invokeMethod('setDebugMode', {'enable': enable});
+  ///设置debug模式
+  Future<void> setDebugMode({bool enable = false}) async {
+    return _channel
+        .invokeMethod('setDebugMode', <String, bool>{'enable': enable});
   }
 
   ///
   /// 申请推送权限，注意这个方法只会向用户弹出一次推送权限请求（如果用户不同意，之后只能用户到设置页面里面勾选相应权限），需要开发者选择合适的时机调用。
   ///
-  void applyPushAuthority(
+  Future<void> applyPushAuthority(
       [JMNotificationSettingsIOS iosSettings =
-          const JMNotificationSettingsIOS()]) {
-    if (!_platform.isIOS) {
+          const JMNotificationSettingsIOS()]) async {
+    if (!Platform.isIOS) {
       return;
     }
-    _channel.invokeMethod('applyPushAuthority', iosSettings.toMap());
+    return _channel.invokeMethod<void>(
+        'applyPushAuthority', iosSettings.toMap());
   }
 
   ///
@@ -379,35 +433,35 @@ class JmessageFlutter extends ValueNotifier<JmessageValue>{
   ///
   /// @param {Int} badge
   ///
-  Future<void> setBadge({@required int badge}) async {
-    await _channel.invokeMethod('setBadge', {'badge': badge});
-    return;
+  Future<void> setBadge({required int badge}) async {
+    return _channel
+        .invokeMethod<void>('setBadge', <String, int>{'badge': badge});
   }
 
+  ///用户注册
   Future<void> userRegister(
-      {@required String username,
-      @required String password,
-      String nickname}) async {
-    print("Action - userRegister: username=$username,pw=$password");
-    await _channel.invokeMethod('userRegister',
-        {'username': username, 'password': password, 'nickname': nickname});
+      {required String username,
+      required String password,
+      String? nickname}) async {
+    print('Action - userRegister: username=$username,pw=$password');
+    return _channel.invokeMethod<void>('userRegister', <String, dynamic>{
+      'username': username,
+      'password': password,
+      'nickname': nickname
+    });
   }
 
-  /*
-  * 登录
-  * @return 用户信息，可能为 null
-  * */
-  Future<JMUserInfo> login({
-    @required String username,
-    @required String password,
+  ///登录
+  /// [JMUserInfo] 用户信息，可能为 null
+  Future<JMUserInfo?> login({
+    required String username,
+    required String password,
   }) async {
-    if (username == null || password == null) {
-      throw ("username or password was passed null");
-    }
-    print("Action - login: username=$username,pw=$password");
+    print('Action - login: username=$username,pw=$password');
 
-    Map userJson = await _channel
-        .invokeMethod('login', {'username': username, 'password': password});
+    final Map<String, dynamic>? userJson = await _channel
+        .invokeMapMethod<String, dynamic>('login',
+            <String, dynamic>{'username': username, 'password': password});
     if (userJson == null) {
       return null;
     } else {
@@ -415,12 +469,15 @@ class JmessageFlutter extends ValueNotifier<JmessageValue>{
     }
   }
 
+  ///登出
   Future<void> logout() async {
-    await _channel.invokeMethod('logout');
+    return await _channel.invokeMethod('logout');
   }
 
-  Future<JMUserInfo> getMyInfo() async {
-    Map userJson = await _channel.invokeMethod('getMyInfo');
+  ///获取我的信息
+  Future<JMUserInfo?> getMyInfo() async {
+    final Map<String, dynamic>? userJson =
+        await _channel.invokeMapMethod<String, dynamic>('getMyInfo');
     if (userJson == null) {
       return null;
     } else {
@@ -428,640 +485,613 @@ class JmessageFlutter extends ValueNotifier<JmessageValue>{
     }
   }
 
-  Future<JMUserInfo> getUserInfo(
-      {@required String username, String appKey}) async {
-    Map userJson = await _channel.invokeMethod(
-        'getUserInfo',
-        {'username': username, 'appKey': appKey}
-          ..removeWhere((key, value) => value == null));
+  ///获取用户信息
+  Future<JMUserInfo?> getUserInfo(
+      {required String username, String? appKey}) async {
+    final Map<String, dynamic>? userJson = await _channel
+        .invokeMapMethod<String, dynamic>('getUserInfo',
+            <String, dynamic>{'username': username, 'appKey': appKey});
+    if (userJson == null) {
+      return null;
+    }
     return JMUserInfo.fromJson(userJson);
   }
 
+  ///修改密码
   Future<void> updateMyPassword(
-      {@required String oldPwd, @required String newPwd}) async {
-    await _channel
-        .invokeMethod('updateMyPassword', {'oldPwd': oldPwd, 'newPwd': newPwd});
-    return;
+      {required String oldPwd, required String newPwd}) async {
+    return await _channel.invokeMethod('updateMyPassword',
+        <String, dynamic>{'oldPwd': oldPwd, 'newPwd': newPwd});
   }
 
-  Future<void> updateMyAvatar({@required String imgPath}) async {
-    await _channel.invokeMethod('updateMyAvatar', {'imgPath': imgPath});
-    return;
+  ///更新头像
+  Future<void> updateMyAvatar({required String imgPath}) async {
+    return await _channel
+        .invokeMethod('updateMyAvatar', <String, dynamic>{'imgPath': imgPath});
   }
 
+  ///更新我的信息
   Future<void> updateMyInfo(
-      {int birthday,
-      String nickname,
-      String signature,
-      String region,
-      String address,
-      JMGender gender,
-      Map<dynamic, dynamic> extras}) async {
-    await _channel.invokeMethod(
-        'updateMyInfo',
-        {
-          'birthday': birthday,
-          'nickname': nickname,
-          'signature': signature,
-          'region': region,
-          'address': address,
-          'gender': getStringFromEnum(gender),
-          'extras': extras,
-        }..removeWhere((key, value) => value == null));
-    return;
+      {int? birthday,
+      String? nickname,
+      String? signature,
+      String? region,
+      String? address,
+      JMGender? gender,
+      Map<String, dynamic>? extras}) async {
+    return await _channel.invokeMethod('updateMyInfo', <String, dynamic>{
+      'birthday': birthday,
+      'nickname': nickname,
+      'signature': signature,
+      'region': region,
+      'address': address,
+      'gender': getStringFromEnum(gender),
+      'extras': extras,
+    });
   }
 
+  ///更新群头像
   Future<void> updateGroupAvatar(
-      {@required String id, @required String imgPath}) async {
-    await _channel.invokeMethod(
-        'updateGroupAvatar',
-        {
-          'id': id,
-          'imgPath': imgPath,
-        }..removeWhere((key, value) => value == null));
-    return;
+      {required String id, required String imgPath}) async {
+    return await _channel.invokeMethod('updateGroupAvatar', <String, dynamic>{
+      'id': id,
+      'imgPath': imgPath,
+    });
   }
 
-  Future<Map> downloadThumbGroupAvatar({
-    @required String id,
+  ///下载群头像缩略图
+  Future<Map<String, dynamic>?> downloadThumbGroupAvatar({
+    required String id,
   }) async {
-    Map res = await _channel.invokeMethod(
-        'downloadThumbGroupAvatar',
-        {
-          'id': id,
-        }..removeWhere((key, value) => value == null));
+    final Map<String, dynamic>? res = await _channel
+        .invokeMapMethod<String, dynamic>(
+            'downloadThumbGroupAvatar', <String, dynamic>{
+      'id': id,
+    });
     return res;
   }
 
-  Future<Map> downloadOriginalGroupAvatar({
-    @required String id,
+  ///下载群头像原始图片
+  Future<Map<String, dynamic>> downloadOriginalGroupAvatar({
+    required String id,
   }) async {
-    Map res = await _channel.invokeMethod(
-        'downloadOriginalGroupAvatar',
-        {
-          'id': id,
-        }..removeWhere((key, value) => value == null));
-    return {'id': res['id'], 'filePath': res['filePath']};
+    final Map<String, dynamic>? res = await _channel
+        .invokeMapMethod<String, dynamic>(
+            'downloadOriginalGroupAvatar', <String, dynamic>{
+      'id': id,
+    });
+    return <String, dynamic>{
+      'id': res!['id'] ?? '',
+      'filePath': res['filePath'] ?? ''
+    };
   }
 
+  ///设置会话的拓展参数
   Future<JMConversationInfo> setConversationExtras(
-      {dynamic type,
+      {
 
       /// (JMSingle | JMGroup | JMChatRoom)
-      Map<dynamic, dynamic> extras}) async {
-    var param = type.toJson();
+      required dynamic type,
+      Map<dynamic, dynamic>? extras}) async {
+    final Map<String, dynamic> param = <String, dynamic>{};
+    if (type is JMSingle) {
+      param.addAll(type.toJson());
+    } else if (type is JMGroup) {
+      param.addAll(type.toJson());
+    } else if (type is JMChatRoom) {
+      param.addAll(type.toJson());
+    }
     param['extras'] = extras;
-    Map resMap = await _channel.invokeMethod('setConversationExtras',
-        param..removeWhere((key, value) => value == null));
-    var res = JMConversationInfo.fromJson(resMap);
+    final Map<String, dynamic>? resMap = await _channel
+        .invokeMapMethod<String, dynamic>('setConversationExtras', param);
+    final JMConversationInfo res = JMConversationInfo.fromJson(resMap!);
     return res; // {id: string; filePath: string}
   }
 
+  ///创建消息
   Future<dynamic> createMessage({
-    @required JMMessageType type, // 消息类型
-    @required dynamic targetType,
+    /// 消息类型
+    required JMMessageType type,
 
     /// (JMSingle | JMGroup | JMChatRoom)
-    String text,
-    String path,
-    String fileName,
-    Map<dynamic, dynamic> customObject,
-    double latitude,
-    double longitude,
-    int scale,
-    String address,
-    Map<dynamic, dynamic> extras,
+    required dynamic targetType,
+    String? text,
+    String? path,
+    String? fileName,
+    Map<String, dynamic>? customObject,
+    double? latitude,
+    double? longitude,
+    int? scale,
+    String? address,
+    Map<String, dynamic>? extras,
   }) async {
-    Map param = targetType.toJson();
-
-    if (extras != null) {
-      param..addAll({'extras': extras});
+    final Map<String, dynamic> param = <String, dynamic>{};
+    if (targetType is JMSingle) {
+      param.addAll(targetType.toJson());
+    } else if (targetType is JMGroup) {
+      param.addAll(targetType.toJson());
+    } else if (targetType is JMChatRoom) {
+      param.addAll(targetType.toJson());
     }
 
-    param
-      ..addAll({
-        'messageType': getStringFromEnum(type),
-        'text': text,
-        'path': path,
-        'fileName': fileName,
-        'customObject': customObject,
-        'latitude': latitude,
-        'longitude': longitude,
-        'scale': scale,
-        'address': address,
-      });
+    if (extras != null) {
+      param.addAll(<String, dynamic>{'extras': extras});
+    }
 
-    Map resMap = await _channel.invokeMethod(
-        'createMessage', param..removeWhere((key, value) => value == null));
-    var res = JMNormalMessage.generateMessageFromJson(resMap);
+    param.addAll(<String, dynamic>{
+      'messageType': getStringFromEnum(type),
+      'text': text,
+      'path': path,
+      'fileName': fileName,
+      'customObject': customObject,
+      'latitude': latitude,
+      'longitude': longitude,
+      'scale': scale,
+      'address': address,
+    });
+
+    final Map<String, dynamic>? resMap =
+        await _channel.invokeMapMethod<String, dynamic>('createMessage',
+            param..removeWhere((String key, dynamic value) => value == null));
+    final JMNormalMessage res = JMNormalMessage.cast(resMap!);
     return res;
+  }
+
+  ///消息参数 [type]: (JMSingle | JMGroup | JMChatRoom)
+  Map<String, dynamic> _messageParams(
+      {required dynamic type,
+      required JMMessageSendOptions? sendOption,
+      required Map<String, dynamic>? extras}) {
+    final Map<String, dynamic> param = <String, dynamic>{};
+    if (type is JMSingle) {
+      param.addAll(type.toJson());
+    } else if (type is JMGroup) {
+      param.addAll(type.toJson());
+    } else if (type is JMChatRoom) {
+      param.addAll(type.toJson());
+    }
+
+    if (sendOption != null) {
+      param['messageSendingOptions'] = sendOption.toJson();
+    }
+
+    if (extras != null) {
+      param['extras'] = extras;
+    }
+    return param;
   }
 
   /// message 可能是 JMTextMessage | JMVoiceMessage | JMImageMessage | JMFileMessage | JMCustomMessage;
   /// NOTE: 不要传接收到的消息进去，只能传通过 createMessage 创建的消息。
   Future<dynamic> sendMessage(
-      {@required JMNormalMessage message,
-      JMMessageSendOptions sendOption}) async {
-    Map param = message.target.targetType.toJson();
-
-    Map optionMap = {};
-
-    if (sendOption != null) {
-      optionMap = {
-        'messageSendingOptions': sendOption.toJson()
-          ..removeWhere((key, value) => value == null)
-      };
+      {required JMNormalMessage message,
+      JMMessageSendOptions? sendOption}) async {
+    final Map<String, dynamic> param = <String, dynamic>{};
+    final dynamic targetType = message.target.targetType;
+    if (targetType is JMSingle) {
+      param.addAll(targetType.toJson());
+    } else if (targetType is JMGroup) {
+      param.addAll(targetType.toJson());
+    } else if (targetType is JMChatRoom) {
+      param.addAll(targetType.toJson());
     }
 
-    param..addAll(optionMap)..addAll({'id': message.id});
-    Map resMap = await _channel.invokeMethod(
-        'sendDraftMessage', param..removeWhere((key, value) => value == null));
-    var res = JMNormalMessage.generateMessageFromJson(resMap);
+    if (sendOption != null) {
+      param['messageSendingOptions'] = sendOption.toJson();
+    }
+
+    param['id'] = message.id;
+    final Map<String, dynamic>? resMap = await _channel
+        .invokeMapMethod<String, dynamic>('sendDraftMessage', param);
+    final JMNormalMessage res = JMNormalMessage.cast(resMap!);
     return res;
   }
 
+  ///发送文字消息
   Future<JMTextMessage> sendTextMessage({
-    @required dynamic type,
-
     /// (JMSingle | JMGroup | JMChatRoom)
-    @required String text,
-    JMMessageSendOptions sendOption,
-    Map<dynamic, dynamic> extras,
+    required dynamic type,
+    required String text,
+    JMMessageSendOptions? sendOption,
+    Map<String, dynamic>? extras,
   }) async {
-    Map param = type.toJson();
-    Map optionMap = {};
-    if (sendOption != null) {
-      optionMap = {
-        'messageSendingOptions': sendOption.toJson()
-          ..removeWhere((key, value) => value == null)
-      };
-    }
+    final Map<String, dynamic> param = _messageParams(
+      type: type,
+      sendOption: sendOption,
+      extras: extras,
+    );
 
-    if (extras != null) {
-      param..addAll({'extras': extras});
-    }
+    param['text'] = text;
 
-    param..addAll(optionMap)..addAll({'text': text});
-
-    Map resMap = await _channel.invokeMethod(
-        'sendTextMessage', param..removeWhere((key, value) => value == null));
-    var res = JMNormalMessage.generateMessageFromJson(resMap);
-    return res;
+    final Map<String, dynamic>? resMap = await _channel
+        .invokeMapMethod<String, dynamic>('sendTextMessage', param);
+    final JMNormalMessage res = JMNormalMessage.cast(resMap!);
+    return res as JMTextMessage;
   }
 
+  ///发送图片消息
   Future<JMImageMessage> sendImageMessage({
-    @required dynamic type,
-
     /// (JMSingle | JMGroup | JMChatRoom)
-    @required String path,
-    JMMessageSendOptions sendOption,
-    Map<dynamic, dynamic> extras,
+    required dynamic type,
+    required String path,
+    JMMessageSendOptions? sendOption,
+    Map<String, dynamic>? extras,
   }) async {
-    Map param = type.toJson();
+    final Map<String, dynamic> param = _messageParams(
+      type: type,
+      sendOption: sendOption,
+      extras: extras,
+    );
+    param['path'] = path;
 
-    Map optionMap = {};
-    if (sendOption != null) {
-      optionMap = {
-        'messageSendingOptions': sendOption.toJson()
-          ..removeWhere((key, value) => value == null)
-      };
-    }
-
-    if (extras != null) {
-      param..addAll({'extras': extras});
-    }
-
-    param..addAll(optionMap)..addAll({'path': path});
-
-    Map resMap = await _channel.invokeMethod(
-        'sendImageMessage', param..removeWhere((key, value) => value == null));
-    var res = JMNormalMessage.generateMessageFromJson(resMap);
-    return res;
+    final Map<String, dynamic>? resMap = await _channel
+        .invokeMapMethod<String, dynamic>('sendImageMessage', param);
+    final JMNormalMessage res = JMNormalMessage.cast(resMap!);
+    return res as JMImageMessage;
   }
 
+  ///语音消息
   Future<JMVoiceMessage> sendVoiceMessage({
-    @required dynamic type,
-
     /// (JMSingle | JMGroup | JMChatRoom)
-    @required String path,
-    JMMessageSendOptions sendOption,
-    Map<dynamic, dynamic> extras,
+    required dynamic type,
+    required String path,
+    JMMessageSendOptions? sendOption,
+    Map<String, dynamic>? extras,
   }) async {
-    Map param = type.toJson();
+    final Map<String, dynamic> param = _messageParams(
+      type: type,
+      sendOption: sendOption,
+      extras: extras,
+    );
+    param['path'] = path;
 
-    Map optionMap = {};
-    if (sendOption != null) {
-      optionMap = {
-        'messageSendingOptions': sendOption.toJson()
-          ..removeWhere((key, value) => value == null)
-      };
-    }
-
-    if (extras != null) {
-      param..addAll({'extras': extras});
-    }
-
-    param..addAll(optionMap)..addAll({'path': path});
-
-    Map resMap = await _channel.invokeMethod(
-        'sendVoiceMessage', param..removeWhere((key, value) => value == null));
-    var res = JMNormalMessage.generateMessageFromJson(resMap);
-    return res;
+    final Map<String, dynamic>? resMap = await _channel
+        .invokeMapMethod<String, dynamic>('sendVoiceMessage', param);
+    final JMNormalMessage res = JMNormalMessage.cast(resMap!);
+    return res as JMVoiceMessage;
   }
 
+  ///自定义消息
   Future<JMCustomMessage> sendCustomMessage({
-    @required dynamic type,
+    required dynamic type,
 
     /// (JMSingle | JMGroup | JMChatRoom)
-    @required Map<dynamic, dynamic> customObject,
-    JMMessageSendOptions sendOption,
-    Map<dynamic, dynamic> extras,
+    required Map<dynamic, dynamic> customObject,
+    JMMessageSendOptions? sendOption,
+    Map<String, dynamic>? extras,
   }) async {
-    Map param = type.toJson();
+    final Map<String, dynamic> param = _messageParams(
+      type: type,
+      sendOption: sendOption,
+      extras: extras,
+    );
 
-    Map optionMap = {};
-    if (sendOption != null) {
-      optionMap = {
-        'messageSendingOptions': sendOption.toJson()
-          ..removeWhere((key, value) => value == null)
-      };
-    }
+    param['customObject'] = customObject;
 
-    if (extras != null) {
-      param..addAll({'extras': extras});
-    }
-
-    param..addAll(optionMap)..addAll({'customObject': customObject});
-
-    Map resMap = await _channel.invokeMethod(
-        'sendCustomMessage', param..removeWhere((key, value) => value == null));
-    var res = JMNormalMessage.generateMessageFromJson(resMap);
-    return res;
+    final Map<String, dynamic>? resMap = await _channel
+        .invokeMapMethod<String, dynamic>('sendCustomMessage', param);
+    final JMNormalMessage res = JMNormalMessage.cast(resMap!);
+    return res as JMCustomMessage;
   }
 
+  ///发送位置消息
   Future<JMLocationMessage> sendLocationMessage({
-    @required dynamic type,
-
-    /// (JMSingle | JMGroup | JMChatRoom)
-    @required double latitude,
-    @required double longitude,
-    @required int scale,
-    String address,
-    JMMessageSendOptions sendOption,
-    Map<dynamic, dynamic> extras,
+    required dynamic type,
+    required double latitude,
+    required double longitude,
+    required int scale,
+    String? address,
+    JMMessageSendOptions? sendOption,
+    Map<String, dynamic>? extras,
   }) async {
-    Map param = type.toJson();
+    final Map<String, dynamic> param = _messageParams(
+      type: type,
+      sendOption: sendOption,
+      extras: extras,
+    );
 
-    Map optionMap = {};
-    if (sendOption != null) {
-      optionMap = {
-        'messageSendingOptions': sendOption.toJson()
-          ..removeWhere((key, value) => value == null)
-      };
-    }
+    param['latitude'] = latitude;
+    param['longitude'] = longitude;
+    param['scale'] = scale;
+    param['address'] = address;
 
-    if (extras != null) {
-      param..addAll({'extras': extras});
-    }
-
-    param
-      ..addAll(optionMap)
-      ..addAll({
-        'latitude': latitude,
-        'longitude': longitude,
-        'scale': scale,
-        'address': address,
-      });
-
-    Map resMap = await _channel.invokeMethod('sendLocationMessage',
-        param..removeWhere((key, value) => value == null));
-    var res = JMNormalMessage.generateMessageFromJson(resMap);
-    return res;
+    final Map<String, dynamic>? resMap = await _channel
+        .invokeMapMethod<String, dynamic>('sendLocationMessage', param);
+    final JMNormalMessage res = JMNormalMessage.cast(resMap!);
+    return res as JMLocationMessage;
   }
 
+  ///发送文件消息
   Future<JMFileMessage> sendFileMessage({
-    @required dynamic type,
-
-    /// (JMSingle | JMGroup | JMChatRoom)
-    @required String path,
-    JMMessageSendOptions sendOption,
-    Map<dynamic, dynamic> extras,
+    required dynamic type,
+    required String path,
+    JMMessageSendOptions? sendOption,
+    Map<String, dynamic>? extras,
   }) async {
-    Map param = type.toJson();
-    Map optionMap = {};
-    if (sendOption != null) {
-      optionMap = {
-        'messageSendingOptions': sendOption.toJson()
-          ..removeWhere((key, value) => value == null)
-      };
-    }
+    final Map<String, dynamic> param = _messageParams(
+      type: type,
+      sendOption: sendOption,
+      extras: extras,
+    );
+    param['path'] = path;
 
-    if (extras != null) {
-      param..addAll({'extras': extras});
-    }
-
-    param..addAll(optionMap)..addAll({'path': path});
-
-    Map resMap = await _channel.invokeMethod(
-        'sendFileMessage', param..removeWhere((key, value) => value == null));
-    var res = JMNormalMessage.generateMessageFromJson(resMap);
-    return res;
+    final Map<String, dynamic>? resMap = await _channel
+        .invokeMapMethod<String, dynamic>('sendFileMessage', param);
+    final JMNormalMessage res = JMNormalMessage.cast(resMap!);
+    return res as JMFileMessage;
   }
 
-  /**
-   * 消息撤回
-   *
-   * @param target    聊天对象， JMSingle | JMGroup
-   * @param serverMessageId 消息服务器 id
-   *
-   * */
+  /// 消息撤回
+  ///
+  /// @param target    聊天对象， JMSingle | JMGroup
+  /// @param serverMessageId 消息服务器 id
+  ///
+  ///
   Future<void> retractMessage({
-    @required dynamic target,
+    required dynamic target,
 
     /// (JMSingle | JMGroup )
-    @required String serverMessageId,
+    required String serverMessageId,
   }) async {
-    Map param = target.toJson();
+    Map<String, dynamic> param = <String, dynamic>{};
+    if (target is JMSingle) {
+      param = target.toJson();
+    } else if (target is JMGroup) {
+      param = target.toJson();
+    }
+    param['messageId'] = serverMessageId;
 
-    param..addAll({'messageId': serverMessageId});
+    print('retractMessage: ${param.toString()}');
 
-    print("retractMessage: ${param.toString()}");
-
-    await _channel.invokeMethod(
-        'retractMessage', param..removeWhere((key, value) => value == null));
-
-    return;
+    return await _channel.invokeMethod('retractMessage', param);
   }
 
-  /**
-   * 批量获取本地历史消息
-   *
-   * @param target 聊天对象， JMSingle | JMGroup
-   * @param from  起始位置
-   * @param limit 获取数量
-   * @param isDescend 是否倒叙
-   *
-   * */
-  Future<List> getHistoryMessages(
+  /// 批量获取本地历史消息
+  ///
+  /// @param target 聊天对象， JMSingle | JMGroup
+  /// @param from  起始位置
+  /// @param limit 获取数量
+  /// @param isDescend 是否倒叙
+  ///
+  /// */
+  Future<List<JMNormalMessage>> getHistoryMessages(
       {@required dynamic type,
 
       /// (JMSingle | JMGroup)
-      @required int from,
-      @required int limit,
+      required int from,
+      required int limit,
       bool isDescend = false}) async {
-    Map param = type.toJson();
-
-    param..addAll({'from': from, 'limit': limit, 'isDescend': isDescend});
-
-    List resArr = await _channel.invokeMethod('getHistoryMessages',
-        param..removeWhere((key, value) => value == null));
-
-    List res = [];
-    for (Map messageMap in resArr) {
-      dynamic d = JMNormalMessage.generateMessageFromJson(messageMap);
-      if (d != null) {
-        res.add(d);
-      } else {
-        print("get history msg, get a message is null");
-      }
+    Map<String, dynamic> param = <String, dynamic>{};
+    if (type is JMSingle) {
+      param = type.toJson();
+    } else if (type is JMGroup) {
+      param = type.toJson();
     }
-    //var res = resArr.map((messageMap) => JMNormalMessage.generateMessageFromJson(messageMap)).toList();
-    return res;
+    param['from'] = from;
+    param['limit'] = limit;
+    param['isDescend'] = isDescend;
+
+    final List<Map<String, dynamic>>? resArr =
+        await _channel.invokeListMethod('getHistoryMessages', param);
+
+    return resArr!
+        .map((Map<String, dynamic> e) => JMNormalMessage.cast(e))
+        .toList();
   }
 
-  /**
-   * 获取本地单条消息
-    *
-    * @param target    聊天对象， JMSingle | JMGroup
-    * @param messageId 本地数据库中的消息id，非 serverMessageId
-    *
-    * */
-  Future<dynamic> getMessageById({
-    @required dynamic type,
+  /// 获取本地单条消息
+  ///
+  /// @param target    聊天对象， JMSingle | JMGroup
+  /// @param messageId 本地数据库中的消息id，非 serverMessageId
+  Future<JMNormalMessage> getMessageById({
+    required dynamic type,
 
     /// (JMSingle | JMGroup | JMChatRoom)
-    @required String messageId,
+    required String messageId,
   }) async {
-    Map param = type.toJson();
+    Map<String, dynamic> param = <String, dynamic>{};
+    if (type is JMSingle) {
+      param = type.toJson();
+    } else if (type is JMGroup) {
+      param = type.toJson();
+    }
 
-    param
-      ..addAll({
-        'messageId': messageId,
-      });
+    param['messageId'] = messageId;
 
-    Map msgMap = await _channel.invokeMethod(
-        'getMessageById', param..removeWhere((key, value) => value == null));
+    final Map<String, dynamic>? msgMap = await _channel
+        .invokeMapMethod<String, dynamic>('getMessageById', param);
 
-    return JMNormalMessage.generateMessageFromJson(msgMap);
+    return JMNormalMessage.cast(msgMap!);
   }
 
-  /**
-   * 删除本地单条消息
-   *
-   * @param target    聊天对象， JMSingle | JMGroup
-   * @param messageId 本地数据库中的消息id，非serverMessageId
-   *
-   * */
+  /// 删除本地单条消息
+  ///
+  /// @param target    聊天对象， JMSingle | JMGroup
+  /// @param messageId 本地数据库中的消息id，非serverMessageId
+  ///
+  /// */
   Future<void> deleteMessageById({
-    @required dynamic type,
-
-    /// (JMSingle | JMGroup | JMChatRoom)
-    @required String messageId,
+    required dynamic type,
+    required String messageId,
   }) async {
-    Map param = type.toJson();
+    Map<String, dynamic> param = <String, dynamic>{};
+    if (type is JMSingle) {
+      param = type.toJson();
+    } else if (type is JMGroup) {
+      param = type.toJson();
+    }
+    param['messageId'] = messageId;
 
-    param
-      ..addAll({
-        'messageId': messageId,
-      });
-
-    await _channel.invokeMethod(
-        'deleteMessageById', param..removeWhere((key, value) => value == null));
-
-    return;
+    return await _channel.invokeMethod('deleteMessageById', param);
   }
 
+  ///发送邀请
   Future<void> sendInvitationRequest({
-    @required String username,
-    @required String reason,
-    String appKey,
+    required String username,
+    required String reason,
+    String? appKey,
   }) async {
-    await _channel.invokeMethod(
-        'sendInvitationRequest',
-        {
-          'username': username,
-          'reason': reason,
-          'appKey': appKey,
-        }..removeWhere((key, value) => value == null));
-
-    return;
+    return await _channel
+        .invokeMethod('sendInvitationRequest', <String, dynamic>{
+      'username': username,
+      'reason': reason,
+      'appKey': appKey,
+    });
   }
 
+  ///同意邀请
   Future<void> acceptInvitation({
-    @required String username,
-    String appKey,
+    required String username,
+    String? appKey,
   }) async {
-    await _channel.invokeMethod(
-        'acceptInvitation',
-        {
-          'username': username,
-          'appKey': appKey,
-        }..removeWhere((key, value) => value == null));
-
-    return;
+    return await _channel.invokeMethod('acceptInvitation', <String, dynamic>{
+      'username': username,
+      'appKey': appKey,
+    });
   }
 
+  ///拒绝邀请
   Future<void> declineInvitation({
-    @required String username,
-    @required String reason,
-    String appKey,
+    required String username,
+    required String reason,
+    String? appKey,
   }) async {
-    await _channel.invokeMethod(
-        'declineInvitation',
-        {
-          'username': username,
-          'reason': reason,
-          'appKey': appKey,
-        }..removeWhere((key, value) => value == null));
-
-    return;
+    return await _channel.invokeMethod('declineInvitation', <String, dynamic>{
+      'username': username,
+      'reason': reason,
+      'appKey': appKey,
+    });
   }
 
+  ///从好友列表中移除
   Future<void> removeFromFriendList({
-    @required String username,
-    String appKey,
+    required String username,
+    String? appKey,
   }) async {
-    await _channel.invokeMethod(
-        'removeFromFriendList',
-        {
-          'username': username,
-          'appKey': appKey,
-        }..removeWhere((key, value) => value == null));
-
-    return;
+    return await _channel
+        .invokeMethod('removeFromFriendList', <String, dynamic>{
+      'username': username,
+      'appKey': appKey,
+    });
   }
 
+  ///修改好友备注名称
   Future<void> updateFriendNoteName({
-    @required String username,
-    @required String noteName,
-    String appKey,
+    required String username,
+    required String noteName,
+    String? appKey,
   }) async {
-    await _channel.invokeMethod(
-        'updateFriendNoteName',
-        {
-          'username': username,
-          'noteName': noteName,
-          'appKey': appKey,
-        }..removeWhere((key, value) => value == null));
-
-    return;
+    return await _channel
+        .invokeMethod('updateFriendNoteName', <String, dynamic>{
+      'username': username,
+      'noteName': noteName,
+      'appKey': appKey,
+    });
   }
 
+  ///
   Future<void> updateFriendNoteText({
-    @required String username,
-    @required String noteText,
-    String appKey,
+    required String username,
+    required String noteText,
+    String? appKey,
   }) async {
-    await _channel.invokeMethod(
-        'updateFriendNoteText',
-        {
-          'username': username,
-          'noteText': noteText,
-          'appKey': appKey,
-        }..removeWhere((key, value) => value == null));
-
-    return;
+    return await _channel
+        .invokeMethod('updateFriendNoteText', <String, dynamic>{
+      'username': username,
+      'noteText': noteText,
+      'appKey': appKey,
+    });
   }
 
+  ///获取好友列表
   Future<List<JMUserInfo>> getFriends() async {
-    List<dynamic> userJsons = await _channel.invokeMethod('getFriends');
+    final List<Map<String, dynamic>>? userJsons =
+        await _channel.invokeListMethod('getFriends');
 
-    List<JMUserInfo> users =
-        userJsons.map((userMap) => JMUserInfo.fromJson(userMap)).toList();
+    final List<JMUserInfo> users = userJsons!
+        .map((Map<String, dynamic> userMap) => JMUserInfo.fromJson(userMap))
+        .toList();
     return users;
   }
 
+  ///创建群组
   Future<String> createGroup({
     JMGroupType groupType = JMGroupType.private,
-    String name,
-    String desc,
+    required String name,
+    String? desc,
   }) async {
-    String groupId = await _channel.invokeMethod(
-        'createGroup',
-        {'groupType': getStringFromEnum(groupType), 'name': name, 'desc': desc}
-          ..removeWhere((key, value) => value == null));
-
-    return groupId;
+    final Object? groupId = await _channel.invokeMethod(
+        'createGroup', <String, dynamic>{
+      'groupType': getStringFromEnum(groupType),
+      'name': name,
+      'desc': desc
+    });
+    return groupId!.toString();
   }
 
+  ///获取群组id
   Future<List<String>> getGroupIds() async {
-    List<dynamic> groupIds = await _channel.invokeMethod('getGroupIds');
-    List<String> res = groupIds.map((gid) => '' + gid).toList();
-    return res;
+    final List<String>? groupIds =
+        await _channel.invokeListMethod<String>('getGroupIds');
+
+    return groupIds!;
   }
 
-  Future<JMGroupInfo> getGroupInfo({@required String id}) async {
-    Map groupJson = await _channel.invokeMethod(
-        'getGroupInfo', {'id': id}..removeWhere((key, value) => value == null));
+  ///获取群组信息
+  Future<JMGroupInfo> getGroupInfo({required String id}) async {
+    final Map<String, dynamic>? groupJson = await _channel
+        .invokeMapMethod<String, dynamic>(
+            'getGroupInfo', <String, dynamic>{'id': id});
 
-    return JMGroupInfo.fromJson(groupJson);
+    return JMGroupInfo.fromJson(groupJson!);
   }
 
+  ///修改群组信息
   Future<void> updateGroupInfo({
-    @required String id,
-    String newName,
-    String newDesc,
+    required String id,
+    required String newName,
+    String? newDesc,
   }) async {
-    await _channel.invokeMethod(
-        'updateGroupInfo',
-        {'id': id, 'newName': newName, 'newDesc': newDesc}
-          ..removeWhere((key, value) => value == null));
-
-    return;
+    return await _channel.invokeMethod('updateGroupInfo',
+        <String, dynamic>{'id': id, 'newName': newName, 'newDesc': newDesc});
   }
 
+  ///添加群组成员
   Future<void> addGroupMembers({
-    @required String id,
-    @required List<String> usernameArray,
-    String appKey,
+    required String id,
+    required List<String> usernameArray,
+    String? appKey,
   }) async {
-    await _channel.invokeMethod(
-        'addGroupMembers',
-        {
-          'id': id,
-          'usernameArray': usernameArray,
-          'appKey': appKey,
-        }..removeWhere((key, value) => value == null));
-
-    return;
+    return await _channel.invokeMethod('addGroupMembers', <String, dynamic>{
+      'id': id,
+      'usernameArray': usernameArray,
+      'appKey': appKey,
+    });
   }
 
+  ///移除群组成员
   Future<void> removeGroupMembers({
-    @required String id,
-    @required List<String> usernames,
-    String appKey,
+    required String id,
+    required List<String> usernames,
+    String? appKey,
   }) async {
-    await _channel.invokeMethod(
-        'removeGroupMembers',
-        {
-          'id': id,
-          'usernameArray': usernames,
-          'appKey': appKey,
-        }..removeWhere((key, value) => value == null));
-
-    return;
+    return await _channel.invokeMethod('removeGroupMembers', <String, dynamic>{
+      'id': id,
+      'usernameArray': usernames,
+      'appKey': appKey,
+    });
   }
 
-  Future<void> exitGroup({@required String id}) async {
-    await _channel.invokeMethod(
-        'exitGroup', {'id': id}..removeWhere((key, value) => value == null));
-
-    return;
+  ///退出群组
+  Future<void> exitGroup({required String id}) async {
+    return await _channel
+        .invokeMethod('exitGroup', <String, dynamic>{'id': id});
   }
 
-  Future<List<JMGroupMemberInfo>> getGroupMembers({@required String id}) async {
-    List membersJsons = await _channel.invokeMethod('getGroupMembers',
-        {'id': id}..removeWhere((key, value) => value == null));
+  ///获取群成员列表
+  Future<List<JMGroupMemberInfo>> getGroupMembers({required String id}) async {
+    List<Map<String, dynamic>>? membersJsons = await _channel
+        .invokeMethod('getGroupMembers', <String, dynamic>{'id': id});
 
     List<JMGroupMemberInfo> res = membersJsons
         .map((memberJson) => JMGroupMemberInfo.fromJson(memberJson))
@@ -1717,60 +1747,88 @@ enum JMTargetType { user, group }
 // 'male' | 'female' | 'unknown';
 enum JMGender { male, female, unknown }
 
+///单聊
 class JMSingle {
+  ///会话类型
   final JMConversationType type = JMConversationType.single;
-  String username;
-  String appKey;
 
-  Map toJson() {
-    return {
-      "type": getStringFromEnum(JMConversationType.single),
-      "username": username,
-      "appKey": appKey
+  ///昵称
+  final String username;
+
+  ///appKey
+  final String appKey;
+
+  /// 转为json
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'type': getStringFromEnum(JMConversationType.single),
+      'username': username,
+      'appKey': appKey
     };
   }
 
+  ///json解析
   JMSingle.fromJson(Map<dynamic, dynamic> json)
-      : username = json['username'],
-        appKey = json['appKey'];
+      : username = json['username'].toString(),
+        appKey = json['appKey'].toString();
 }
 
 enum JMGroupType { private, public }
 
+///群聊
 class JMGroup {
+  ///会话类型
   final JMConversationType type = JMConversationType.group;
-  String groupId;
 
+  ///群id
+  final String groupId;
+
+  @override
   bool operator ==(dynamic other) {
-    return (other is JMGroup && other.groupId == groupId);
+    return other is JMGroup && other.groupId == groupId;
   }
 
-  Map toJson() {
-    return {
-      "type": getStringFromEnum(JMConversationType.group),
-      "groupId": groupId
+  ///转为json
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'type': getStringFromEnum(JMConversationType.group),
+      'groupId': groupId
     };
   }
 
-  JMGroup.fromJson(Map<dynamic, dynamic> json) : groupId = json['groupId'];
+  ///解析json
+  JMGroup.fromJson(Map<dynamic, dynamic> json)
+      : groupId = json['groupId'].toString();
+
+  @override
+  int get hashCode => super.hashCode;
 }
 
+///聊天室
 class JMChatRoom {
+  ///会话类型
   final JMConversationType type = JMConversationType.chatRoom;
-  String roomId;
 
+  ///聊天室id
+  final String roomId;
+
+  @override
   bool operator ==(dynamic other) {
-    return (other is JMChatRoom && other.roomId == roomId);
+    return other is JMChatRoom && other.roomId == roomId;
   }
 
-  Map toJson() {
-    return {
-      "type": getStringFromEnum(JMConversationType.chatRoom),
-      "roomId": roomId
+  ///
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'type': getStringFromEnum(JMConversationType.chatRoom),
+      'roomId': roomId
     };
   }
 
   JMChatRoom.fromJson(Map<dynamic, dynamic> json) : roomId = json['roomId'];
+
+  @override
+  int get hashCode => super.hashCode;
 }
 
 // export type JMAllType = (JMSingle | JMGroup | JMChatRoom);
@@ -1906,233 +1964,10 @@ class JMUserInfo {
         isFriend = json['isFriend'],
         gender = getEnumFromString(JMGender.values, json['gender']),
         extras = json['extras'];
-}
 
-enum JMMessageState {
-  draft, // 创建的消息，还未发送
-  sending, // 正在发送中
-  send_succeed, // 发送成功
-  receiving, // ���收中的消息，一般在 SDK 内部使用，无需考虑
-  received, // 已经成功接收
-  send_failed, // 发送失败
-  upload_succeed, // 上传成功
-  upload_failed, // 上传失败
-  download_failed // 接收消息时自动下载资源失败
-}
-
-class JMNormalMessage {
-  String id; // 本地数据库中的消息 id
-  JMMessageState state; // 消息的状态
-  String serverMessageId; // 对应服务器端的消息 id，只用于在服务端查询问题
-  bool isSend; // 消息是否由当前用户发出。true：为当前用户发送；false：为对方用户发送。
-  JMUserInfo from; // 消息发送者对象
-  int createTime; // 发送消息时间
-  Map<dynamic, dynamic> extras; // 附带的键值对
-  dynamic target; // JMUserInfo | JMGroupInfo
-
-  Map toJson() {
-    return {
-      'id': id,
-      'serverMessageId': serverMessageId,
-      'isSend': isSend,
-      'from': from.toJson(),
-      'createTime': createTime,
-      'extras': extras,
-      'target': target.toJson()
-    };
-  }
-
-  JMNormalMessage.fromJson(Map<dynamic, dynamic> json)
-      : id = json['id'],
-        createTime = json['createTime'],
-        serverMessageId = json['serverMessageId'],
-        isSend = json['isSend'],
-        state = getEnumFromString(JMMessageState.values, json['state']),
-        from = JMUserInfo.fromJson(json['from']),
-        extras = json['extras'] {
-    switch (json['target']['type']) {
-      case 'user':
-        target = JMUserInfo.fromJson(json['target']);
-        break;
-      case 'group':
-        target = JMGroupInfo.fromJson(json['target']);
-        break;
-    }
-  }
-
-  static dynamic generateMessageFromJson(Map<dynamic, dynamic> json) {
-    if (json == null) {
-      return null;
-    }
-    JMMessageType type = getEnumFromString(JMMessageType.values, json['type']);
-    switch (type) {
-      case JMMessageType.text:
-        return JMTextMessage.fromJson(json);
-        break;
-      case JMMessageType.image:
-        return JMImageMessage.fromJson(json);
-        break;
-      case JMMessageType.voice:
-        return JMVoiceMessage.fromJson(json);
-        break;
-      case JMMessageType.location:
-        return JMLocationMessage.fromJson(json);
-        break;
-      case JMMessageType.file:
-        return JMFileMessage.fromJson(json);
-        break;
-      case JMMessageType.custom:
-        return JMCustomMessage.fromJson(json);
-        break;
-      case JMMessageType.event:
-        return JMEventMessage.fromJson(json);
-        break;
-      case JMMessageType.prompt:
-        return JMPromptMessage.fromJson(json);
-        break;
-    }
-  }
-}
-
-enum JMMessageType { text, image, voice, file, custom, location, event, prompt }
-
-class JMTextMessage extends JMNormalMessage {
-  final JMMessageType type = JMMessageType.text;
-  String text;
-
-  Map toJson() {
-    var json = super.toJson();
-    json['type'] = getStringFromEnum(JMMessageType.text);
-    json['text'] = text;
-    return json;
-  }
-
-  JMTextMessage.fromJson(Map<dynamic, dynamic> json)
-      : text = json['text'],
-        super.fromJson(json);
-}
-
-class JMVoiceMessage extends JMNormalMessage {
-  String path; // 语音文件路径,如果为空需要调用相应下载方法，注意这是本地路径，不能是 url
-  num duration; // 语音时长，单位秒
-
-  Map toJson() {
-    var json = super.toJson();
-    json['path'] = path;
-    json['duration'] = duration;
-    return json;
-  }
-
-  JMVoiceMessage.fromJson(Map<dynamic, dynamic> json)
-      : path = json['path'],
-        duration = json['duration'],
-        super.fromJson(json);
-}
-
-class JMImageMessage extends JMNormalMessage {
-  String thumbPath; // 图片的缩略图路径, 如果为空需要调用相应下载方法
-
-  Map toJson() {
-    var json = super.toJson();
-    json['thumbPath'] = thumbPath;
-    return json;
-  }
-
-  JMImageMessage.fromJson(Map<dynamic, dynamic> json)
-      : thumbPath = json['thumbPath'],
-        super.fromJson(json);
-}
-
-class JMFileMessage extends JMNormalMessage {
-  String fileName; // 文件名
-
-  Map toJson() {
-    var json = super.toJson();
-    json['fileName'] = fileName;
-    return json;
-  }
-
-  JMFileMessage.fromJson(Map<dynamic, dynamic> json)
-      : fileName = json['fileName'],
-        super.fromJson(json);
-}
-
-class JMLocationMessage extends JMNormalMessage {
-  double longitude; // 经度
-  double latitude; // 纬度
-  int scale; // 地图缩放比例
-  String address; // 详细地址
-
-  Map toJson() {
-    var json = super.toJson();
-    json['longitude'] = longitude;
-    json['latitude'] = latitude;
-    json['scale'] = scale;
-    json['address'] = address;
-
-    return json;
-  }
-
-  JMLocationMessage.fromJson(Map<dynamic, dynamic> json)
-      : longitude = json['longitude'],
-        latitude = json['latitude'],
-        scale = json['scale'],
-        address = json['address'],
-        super.fromJson(json);
-}
-
-class JMCustomMessage extends JMNormalMessage {
-  Map<dynamic, dynamic> customObject; // 自定义键值对
-
-  Map toJson() {
-    var json = super.toJson();
-    json['customObject'] = customObject;
-    return json;
-  }
-
-  JMCustomMessage.fromJson(Map<dynamic, dynamic> json)
-      : customObject = json['customObject'],
-        super.fromJson(json);
-}
-
-class JMPromptMessage extends JMNormalMessage {
-  String promptText;
-
-  Map toJson() {
-    var json = super.toJson();
-    json["promptText"] = promptText;
-    return json;
-  }
-
-  JMPromptMessage.fromJson(Map<dynamic, dynamic> json)
-      : promptText = json["promptText"],
-        super.fromJson(json);
-}
-
-enum JMEventType {
-  group_member_added,
-  group_member_removed,
-  group_member_exit,
-  group_keeper_added,
-  group_keeper_removed,
-  group_dissolved
-}
-
-class JMEventMessage extends JMNormalMessage {
-  JMEventType eventType; // 事件类型
-  List<dynamic> usernames; // List<String>
-
-  Map toJson() {
-    var json = super.toJson();
-    json['eventType'] = getStringFromEnum(eventType);
-    json['usernames'] = usernames;
-    return json;
-  }
-
-  JMEventMessage.fromJson(Map<dynamic, dynamic> json)
-      : eventType = getEnumFromString(JMEventType.values, json['eventType']),
-        usernames = json['usernames'],
-        super.fromJson(json);
+  @override
+  // TODO: implement hashCode
+  int get hashCode => super.hashCode;
 }
 
 enum JMLoginStateChangedType {
@@ -2314,6 +2149,10 @@ class JMGroupInfo {
     );
     return;
   }
+
+  @override
+  // TODO: implement hashCode
+  int get hashCode => super.hashCode;
 }
 
 enum JMGroupMemberType {
@@ -2380,18 +2219,35 @@ class JMChatRoomInfo {
         createTime = json['createTime'],
         maxMemberCount = json['maxMemberCount'],
         memberCount = json['memberCount'];
+
+  @override
+  // TODO: implement hashCode
+  int get hashCode => super.hashCode;
 }
 
+///会话信息
 class JMConversationInfo {
-  JMConversationType conversationType; // 会话类型
-  String title; // 会话标题
-  int unreadCount; // 未读消息数
-  dynamic target; // JMUserInfo or JMGroupInfo or JMChatRoom
-  dynamic latestMessage; // 最近的一条消息对象。如果不存在消息，则 conversation 对象中没有该属性。
-  Map<dynamic, dynamic> extras;
+  /// 会话类型
+  final JMConversationType conversationType;
 
-  Map toJson() {
-    return {
+  /// 会话标题
+  final String title;
+
+  /// 未读消息数
+  final int unreadCount;
+
+  /// JMUserInfo or JMGroupInfo or JMChatRoom
+  late final dynamic target;
+
+  /// 最近的一条消息对象。如果不存在消息，则 conversation 对象中没有该属性。
+  late final JMNormalMessage? latestMessage;
+
+  ///拓展参数
+  final Map<dynamic, dynamic> extras;
+
+  ///
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
       'title': title,
       'conversationType': getStringFromEnum(conversationType),
       'unreadCount': unreadCount,
@@ -2399,36 +2255,43 @@ class JMConversationInfo {
     };
   }
 
+  ///
   JMConversationInfo.fromJson(Map<dynamic, dynamic> json)
       : conversationType = getEnumFromString(
-            JMConversationType.values, json['conversationType']),
-        title = json['title'],
-        unreadCount = json['unreadCount'],
-        extras = json['extras'] {
+            JMConversationType.values, json['conversationType'].toString()),
+        title = json['title'].toString(),
+        unreadCount = json['unreadCount'] as int,
+        extras = json['extras'] as Map<String, dynamic> {
     switch (conversationType) {
       case JMConversationType.single:
-        target = JMUserInfo.fromJson(json['target']);
+        target = JMUserInfo.fromJson(json['target'] as Map<String, dynamic>);
         break;
       case JMConversationType.group:
-        target = JMGroupInfo.fromJson(json['target']);
+        target = JMGroupInfo.fromJson(json['target'] as Map<String, dynamic>);
         break;
       case JMConversationType.chatRoom:
-        target = JMChatRoomInfo.fromJson(json['target']);
+        target =
+            JMChatRoomInfo.fromJson(json['target'] as Map<String, dynamic>);
         break;
     }
 
-    latestMessage =
-        JMNormalMessage.generateMessageFromJson(json['latestMessage']);
+    final Object? map = json['latestMessage'];
+    if (map == null) {
+      latestMessage = null;
+    } else {
+      latestMessage = JMNormalMessage.cast(map as Map<String, dynamic>);
+    }
   }
 
-  bool isMyMessage(dynamic message) {
+  ///
+  bool isMyMessage(JMNormalMessage message) {
     // TODO:
     return target == message.target;
   }
 
-  // extras use Map<String, String>
-  Future<void> setExtras(Map<dynamic, dynamic> extras) async {
-    this.extras = extras;
+  ///
+  Future<void> setExtras(Map<String, dynamic> extras) async {
+    this.extras.addAll(extras);
     await JmessageFlutter().setConversationExtras(
       type: target.targetType,
       extras: extras,
@@ -2437,11 +2300,11 @@ class JMConversationInfo {
 
   // sendText
   Future<JMTextMessage> sendTextMessage({
-    @required String text,
-    JMMessageSendOptions sendOption,
-    Map<dynamic, dynamic> extras,
+    required String text,
+    JMMessageSendOptions? sendOption,
+    Map<dynamic, dynamic>? extras,
   }) async {
-    JMTextMessage msg = await JmessageFlutter().sendTextMessage(
+    final JMTextMessage msg = await JmessageFlutter().sendTextMessage(
         type: target.targetType,
         text: text,
         sendOption: sendOption,
