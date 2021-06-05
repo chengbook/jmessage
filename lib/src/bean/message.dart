@@ -1,4 +1,6 @@
-import 'package:jmessage_flutter/jmessage_flutter.dart';
+import 'package:jmessage_flutter/src/enum/jmessage_enum.dart';
+
+import 'jm_info.dart';
 
 ///消息类型
 enum JMMessageType {
@@ -148,7 +150,7 @@ abstract class JMNormalMessage {
   final Map<String, dynamic>? extras;
 
   /// JMUserInfo | JMGroupInfo
-  late final dynamic target;
+  late final BaseInfo target;
 
   ///转为json
   Map<String, dynamic> toJson() {
@@ -305,13 +307,13 @@ class JMPromptMessage extends JMNormalMessage {
   @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> json = super.toJson();
-    json["promptText"] = promptText;
+    json['promptText'] = promptText;
     return json;
   }
 
   ///
   JMPromptMessage.fromJson(Map<dynamic, dynamic> json)
-      : promptText = json["promptText"].toString(),
+      : promptText = json['promptText'].toString(),
         super.fromJson(json);
 }
 
