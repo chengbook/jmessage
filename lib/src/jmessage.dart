@@ -20,16 +20,9 @@ _JMessage jMessage = _JMessage();
 class _JMessage extends ValueNotifier<JMessageValue> {
   final MethodChannel _channel = const MethodChannel('jmessage_flutter');
 
-  ///
   _JMessage() : super(JMessageValue()) {
     _channel.setMethodCallHandler(_handleMethod);
   }
-
-  ///
-  // Future<String> get platformVersion async {
-  //   final String version = await _channel.invokeMethod('getPlatformVersion');
-  //   return version;
-  // }
 
   Future<void> _handleMethod(MethodCall call) async {
     print('flutter 处理方法命令中 = ${call.method}');
