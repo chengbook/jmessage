@@ -2,6 +2,7 @@ package com.jiguang.jmessageflutter;
 
 import android.graphics.Bitmap;
 import android.os.Environment;
+import android.util.Log;
 
 //import org.apache.cordova.CallbackContext;
 import org.json.JSONArray;
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import cn.jpush.im.android.api.JMessageClient;
 import cn.jpush.im.android.api.callback.GetUserInfoCallback;
@@ -26,7 +28,9 @@ import cn.jpush.im.android.api.model.Message;
 import cn.jpush.im.android.api.options.MessageSendingOptions;
 import cn.jpush.im.api.BasicCallback;
 
+import static android.content.ContentValues.TAG;
 import static com.jiguang.jmessageflutter.JsonUtils.JsonToMessage;
+
 import io.flutter.plugin.common.MethodChannel.Result;
 
 class JMessageUtils {
@@ -46,7 +50,7 @@ class JMessageUtils {
         }
     }
 
-    static void handleResult(HashMap returnObject, int status, String desc, Result callback) {
+    static void handleResult(Map<String, Object> returnObject, int status, String desc, Result callback) {
         if (status == 0) {
             callback.success(returnObject);
         } else {
@@ -54,7 +58,7 @@ class JMessageUtils {
         }
     }
 
-    static void handleResult(List returnObject, int status, String desc, Result callback) {
+    static void handleResult(List<Object> returnObject, int status, String desc, Result callback) {
         if (status == 0) {
             callback.success(returnObject);
         } else {
@@ -107,18 +111,22 @@ class JMessageUtils {
         String type = params.getString("type");
         Conversation conversation = null;
 
-        if (type.equals("single")) {
-            String username = params.getString("username");
-            String appKey = params.has("appKey") ? params.getString("appKey") : "";
-            conversation = Conversation.createSingleConversation(username, appKey);
+        switch (type) {
+            case "single":
+                String username = params.getString("username");
+                String appKey = params.has("appKey") ? params.getString("appKey") : "";
+                conversation = Conversation.createSingleConversation(username, appKey);
 
-        } else if (type.equals("group")) {
-            String groupId = params.getString("groupId");
-            conversation = Conversation.createGroupConversation(Long.parseLong(groupId));
+                break;
+            case "group":
+                String groupId = params.getString("groupId");
+                conversation = Conversation.createGroupConversation(Long.parseLong(groupId));
 
-        } else if (type.equals("chatRoom")) {
-            long roomId = Long.parseLong(params.getString("roomId"));
-            conversation = Conversation.createChatRoomConversation(roomId);
+                break;
+            case "chatRoom":
+                long roomId = Long.parseLong(params.getString("roomId"));
+                conversation = Conversation.createChatRoomConversation(roomId);
+                break;
         }
 
         return conversation;
@@ -128,18 +136,22 @@ class JMessageUtils {
         String type = params.getString("type");
         Conversation conversation = null;
 
-        if (type.equals("single")) {
-            String username = params.getString("username");
-            String appKey = params.has("appKey") ? params.getString("appKey") : "";
-            conversation = JMessageClient.getSingleConversation(username, appKey);
+        switch (type) {
+            case "single":
+                String username = params.getString("username");
+                String appKey = params.has("appKey") ? params.getString("appKey") : "";
+                conversation = JMessageClient.getSingleConversation(username, appKey);
 
-        } else if (type.equals("group")) {
-            String groupId = params.getString("groupId");
-            conversation = JMessageClient.getGroupConversation(Long.parseLong(groupId));
+                break;
+            case "group":
+                String groupId = params.getString("groupId");
+                conversation = JMessageClient.getGroupConversation(Long.parseLong(groupId));
 
-        } else if (type.equals("chatRoom")) {
-            long roomId = Long.parseLong(params.getString("roomId"));
-            conversation = JMessageClient.getChatRoomConversation(roomId);
+                break;
+            case "chatRoom":
+                long roomId = Long.parseLong(params.getString("roomId"));
+                conversation = JMessageClient.getChatRoomConversation(roomId);
+                break;
         }
 
         return conversation;
@@ -155,10 +167,10 @@ class JMessageUtils {
             Message msg;
             String messageId = params.getString("messageId");
 
-            Long b = Long.parseLong(messageId);
+            long b = Long.parseLong(messageId);
             if (b > Integer.MAX_VALUE) {
                 msg = conversation.getMessage(Long.parseLong(messageId));
-            }else {
+            } else {
                 msg = conversation.getMessage(Integer.parseInt(messageId));
             }
 
@@ -171,13 +183,13 @@ class JMessageUtils {
     }
 
     static void sendMessage(Conversation conversation, MessageContent content, MessageSendingOptions options,
-            final Result callback) {
+                            final Result callback) {
         final Message msg = conversation.createSendMessage(content);
         msg.setOnSendCompleteCallback(new BasicCallback() {
             @Override
             public void gotResult(int status, String desc) {
                 if (status == 0) {
-                    HashMap json = JsonUtils.toJson(msg);
+                    Map<String, Object> json = JsonUtils.toJson(msg);
                     handleResult(json, status, desc, callback);
                 } else {
                     handleResult(status, desc, callback);
@@ -195,7 +207,8 @@ class JMessageUtils {
     static String storeImage(Bitmap bitmap, String filename, String pkgName) {
         File avatarFile = new File(getAvatarPath(pkgName));
         if (!avatarFile.exists()) {
-            avatarFile.mkdirs();
+            boolean result = avatarFile.mkdirs();
+            Log.i(TAG, "storeImage: " + result);
         }
 
         String filePath = getAvatarPath(pkgName) + filename + ".png";

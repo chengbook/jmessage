@@ -1,14 +1,14 @@
 package com.jiguang.jmessageflutter;
 
-//import org.apache.cordova.CallbackContext;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import cn.jpush.im.android.api.ChatRoomManager;
@@ -17,13 +17,12 @@ import cn.jpush.im.android.api.callback.RequestCallback;
 import cn.jpush.im.android.api.model.ChatRoomInfo;
 import cn.jpush.im.android.api.model.Conversation;
 import cn.jpush.im.api.BasicCallback;
+import io.flutter.plugin.common.MethodChannel.Result;
 
+import static com.jiguang.jmessageflutter.JMessageUtils.handleResult;
 import static com.jiguang.jmessageflutter.JmessageFlutterPlugin.ERR_CODE_PARAMETER;
 import static com.jiguang.jmessageflutter.JmessageFlutterPlugin.ERR_MSG_PARAMETER;
-import static com.jiguang.jmessageflutter.JMessageUtils.handleResult;
 import static com.jiguang.jmessageflutter.JsonUtils.toJson;
-
-import io.flutter.plugin.common.MethodChannel.Result;
 
 
 /**
@@ -52,7 +51,7 @@ class ChatRoomHandler {
                     return;
                 }
 
-                ArrayList jsonArr = new ArrayList();
+                List<Map<String, Object>> jsonArr = new ArrayList<>();
                 for (ChatRoomInfo chatroomInfo : chatRoomInfos) {
                     jsonArr.add(toJson(chatroomInfo));
                 }
@@ -70,7 +69,7 @@ class ChatRoomHandler {
                     return;
                 }
 
-                ArrayList jsonArr = new ArrayList();
+                List<Map<String, Object>> jsonArr = new ArrayList<>();
                 for (ChatRoomInfo chatroomInfo : chatRoomInfoList) {
                     jsonArr.add(toJson(chatroomInfo));
                 }
@@ -80,7 +79,7 @@ class ChatRoomHandler {
     }
 
     static void getChatRoomInfoListById(JSONObject data, final Result callback) {
-        Set<Long> roomIds = new HashSet<Long>(); // JS 层为了和 iOS 统一，因此 roomId 类型为 String，在原生做转换。
+        Set<Long> roomIds = new HashSet<>(); // JS 层为了和 iOS 统一，因此 roomId 类型为 String，在原生做转换。
 
         try {
 
@@ -103,7 +102,7 @@ class ChatRoomHandler {
                     return;
                 }
 
-                ArrayList jsonArr = new ArrayList();
+                List<Map<String, Object>> jsonArr = new ArrayList<>();
                 for (ChatRoomInfo chatroomInfo : chatRoomInfos) {
                     jsonArr.add(toJson(chatroomInfo));
                 }
@@ -123,7 +122,7 @@ class ChatRoomHandler {
             return;
         }
 
-        Set<Long> roomIds = new HashSet<Long>();
+        Set<Long> roomIds = new HashSet<>();
         roomIds.add(roomId);
 
         ChatRoomManager.getChatRoomInfos(roomIds, new RequestCallback<List<ChatRoomInfo>>() {
@@ -134,7 +133,7 @@ class ChatRoomHandler {
                     return;
                 }
 
-                HashMap chatroomInfoJson = toJson(chatRoomInfoList.get(0));
+                Map<String, Object> chatroomInfoJson = toJson(chatRoomInfoList.get(0));
                 callback.success(chatroomInfoJson);
             }
         });
@@ -194,10 +193,10 @@ class ChatRoomHandler {
         });
     }
 
-    static void getChatRoomConversationList(JSONObject data, final Result callback) {
+    static void getChatRoomConversationList(final Result callback) {
         List<Conversation> conversations = JMessageClient.getChatRoomConversationList();
 
-        ArrayList result = new ArrayList();
+        List<Map<String, Object>> result = new ArrayList<>();
 
         if (conversations == null) {
             callback.success(result);
